@@ -6,6 +6,7 @@
 #import <AppKit/AppKit.h>
 #import <CoreFoundation/CoreFoundation.h>
 #import <MetalKit/MetalKit.h>
+#include <simd/vector_types.h>
 
 // c++ interface
 #include "app_launch.h"
@@ -24,17 +25,17 @@
 }
 - (void)keyDown:(NSEvent *)event
 {
-  NSLog(@"keyDown");
+  // NSLog(@"keyDown");
 }
 
 - (void)keyUp:(NSEvent *)event
 {
-  NSLog(@"keyDown");
+  // NSLog(@"keyDown");
 }
 
 - (void)mouseDown:(NSEvent *)event
 {
-  NSLog(@"mouseDown");
+  // NSLog@"mouseDown");
 }
 
 @end
@@ -48,15 +49,15 @@
 @implementation WindowDelegate
 - (void)windowDidMove:(NSNotification *)notification
 {
-  NSLog(@"DidMove");
+  // NSLog(@"DidMove");
 }
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-  NSLog(@"DidKey");
+  // NSLog(@"DidKey");
 }
 - (void)windowDidBecomeMain:(NSNotification *)notification
 {
-  NSLog(@"DidMain");
+  // NSLog(@"DidMain");
 }
 @end
 
@@ -146,6 +147,13 @@ NSMenu *createMenu();
 {
   CGRect frame = {0.0, 0.0, 1600.0, 960.0};
 
+  appLoop_->InitialWindowSize(frame.size.width, frame.size.height);
+  double clearRed   = 0.0;
+  double clearGreen = 0.0;
+  double clearBlue  = 0.0;
+  double clearAlpha = 1.0;
+  appLoop_->WindowClearColor(clearRed, clearGreen, clearBlue, clearAlpha);
+
   window_                       = [[BorderlessWindow alloc]
       initWithContentRect:frame
                 styleMask:NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
@@ -154,7 +162,7 @@ NSMenu *createMenu();
   device_                       = MTLCreateSystemDefaultDevice();
   view_                         = [[MTKView alloc] initWithFrame:frame device:device_];
   view_.colorPixelFormat        = MTLPixelFormatRGBA8Unorm_sRGB;
-  view_.clearColor              = MTLClearColorMake(0.0, 0.05, 0.0, 1.0);
+  view_.clearColor              = MTLClearColorMake(clearRed, clearGreen, clearBlue, clearAlpha);
   view_.depthStencilPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
   view_.clearDepth              = 1.0f;
   view_.sampleCount             = 1;

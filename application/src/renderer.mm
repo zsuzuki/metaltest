@@ -13,6 +13,37 @@
 
 static const NSUInteger MaxBuffersInFlight = 3;
 
+class AppCtx : public ApplicationContext
+{
+public:
+  Draw2D *draw2d_;
+
+  AppCtx()           = default;
+  ~AppCtx() override = default;
+
+  void Print(const char *msg, float x, float y) override
+  {
+    [draw2d_ print:[NSString stringWithUTF8String:msg] x:x y:y];
+  }
+  void SetTextColor(float red, float green, float blue, float alpha) override
+  {
+    [draw2d_ setTextColorRed:red green:green blue:blue alpha:alpha];
+  }
+
+  void DrawLine(simd_float2 from, simd_float2 to, simd_float4 color) override
+  {
+    [draw2d_ drawLine:from to:to color:color];
+  }
+  void DrawRect(simd_float2 from, simd_float2 to, simd_float4 color) override
+  {
+    [draw2d_ drawRect:from to:to color:color];
+  }
+  void FillRect(simd_float2 from, simd_float2 to, simd_float4 color) override
+  {
+    [draw2d_ fillRect:from to:to color:color];
+  }
+};
+
 @implementation Renderer
 {
   dispatch_semaphore_t     renderSemaphore_;
@@ -96,7 +127,9 @@ static const NSUInteger MaxBuffersInFlight = 3;
     dispatch_semaphore_signal(block_sema);
   }];
 
-  appLoop_->Update();
+  AppCtx appctx;
+  appctx.draw2d_ = draw2d_;
+  appLoop_->Update(appctx);
 
   // render
   auto renderPassDescriptor = view.currentRenderPassDescriptor;
@@ -131,6 +164,7 @@ static const NSUInteger MaxBuffersInFlight = 3;
   float aspect       = size.width / (float)size.height;
   draw2d_.screenSize = size;
   camera_.buildPerspective(45.0f, aspect, 0.1f, 1000.0f);
+  appLoop_->ResizeWindow(size.width, size.height);
 }
 
 - (void)setApplicationLoop:(nonnull ApplicationLoop *)appLoop

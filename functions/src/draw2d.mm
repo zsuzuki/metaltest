@@ -60,6 +60,8 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
   id<MTLRenderPipelineState> pipelineStatePrim_;
   id<MTLBuffer>              vertices_[3];
   NSUInteger                 nbPrimitives_;
+  id<MTLBuffer>              fillVertices_[3];
+  NSUInteger                 nbFillPrimitives_;
 
   // sprite
   NSMutableArray<Sprite *> *spriteList;
@@ -113,6 +115,31 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
   vtx2d[7].color    = col16;
 
   nbPrimitives_ += 8;
+}
+
+- (void)fillRect:(simd_float2)from to:(simd_float2)to color:(simd_float4)color
+{
+  auto  vtx   = fillVertices_[pageIndex_];
+  auto *vtx2d = (VertexDataPrim2D *)vtx.contents + nbFillPrimitives_;
+
+  from *= contentScale_;
+  to *= contentScale_;
+
+  auto col16        = vcvt_f16_f32(color);
+  vtx2d[0].position = from;
+  vtx2d[0].color    = col16;
+  vtx2d[1].position = simd_make_float2(to.x, from.y);
+  vtx2d[1].color    = col16;
+  vtx2d[2].position = simd_make_float2(from.x, to.y);
+  vtx2d[2].color    = col16;
+  vtx2d[3].position = simd_make_float2(to.x, from.y);
+  vtx2d[3].color    = col16;
+  vtx2d[4].position = simd_make_float2(from.x, to.y);
+  vtx2d[4].color    = col16;
+  vtx2d[5].position = to;
+  vtx2d[5].color    = col16;
+
+  nbFillPrimitives_ += 6;
 }
 
 // テキスト描画カラー
@@ -232,10 +259,12 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
 
     for (int i = 0; i < 3; i++)
     {
-      textVtx_[i]  = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 500
+      textVtx_[i]      = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 500
                                          options:MTLResourceStorageModeShared];
-      vertices_[i] = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 500
+      vertices_[i]     = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 500
                                           options:MTLResourceStorageModeShared];
+      fillVertices_[i] = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 500
+                                              options:MTLResourceStorageModeShared];
     }
     requestClearText_ = NO;
     fontRender_       = [[FontRender alloc] init];
@@ -254,6 +283,7 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
   {
     [textVtx_[i] release];
     [vertices_[i] release];
+    [fillVertices_[i] release];
   }
   [fontRender_ release];
   [uniformBuffer_ release];
@@ -323,12 +353,31 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
   uniform2d->size[0] = screenSize.width;
   uniform2d->size[1] = screenSize.height;
 
+  if (nbPrimitives_ > 0 || nbFillPrimitives_ > 0)
+  {
+    [renderEncoder setRenderPipelineState:pipelineStatePrim_];
+  }
+
+  if (nbFillPrimitives_ > 0)
+  {
+    // fill primitive draw
+    auto vtx = fillVertices_[pageIndex_];
+    [vtx didModifyRange:NSMakeRange(0, nbFillPrimitives_ * sizeof(VertexDataPrim2D))];
+
+    [renderEncoder setVertexBuffer:uniformBuffer_ offset:0 atIndex:1];
+    [renderEncoder setFragmentBuffer:uniformBuffer_ offset:0 atIndex:1];
+    [renderEncoder setVertexBuffer:vtx offset:0 atIndex:0];
+    [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
+                      vertexStart:0
+                      vertexCount:nbFillPrimitives_];
+    nbFillPrimitives_ = 0;
+  }
+
   if (nbPrimitives_ > 0)
   {
     // primitive draw
     auto vtx = vertices_[pageIndex_];
     [vtx didModifyRange:NSMakeRange(0, nbPrimitives_ * sizeof(VertexDataPrim2D))];
-    [renderEncoder setRenderPipelineState:pipelineStatePrim_];
 
     [renderEncoder setVertexBuffer:uniformBuffer_ offset:0 atIndex:1];
     [renderEncoder setFragmentBuffer:uniformBuffer_ offset:0 atIndex:1];
