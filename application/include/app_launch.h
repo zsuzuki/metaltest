@@ -29,6 +29,8 @@ public:
   virtual CameraData &GetCamera() = 0;
 
   virtual void DrawLine3D(simd_float3 from, simd_float3 to, simd_float4 color) = 0;
+  virtual void DrawTriangle3D(simd_float3 p0, simd_float3 p1, simd_float3 p2,
+                              simd_float4 color)                               = 0;
   virtual void DrawPlane3D(simd_float3 p0, simd_float3 p1, simd_float3 p2, simd_float3 p3,
                            simd_float4 color)                                  = 0;
 };

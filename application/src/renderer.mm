@@ -51,6 +51,10 @@ public:
   {
     [draw3d_ drawLine:from to:to color:color];
   }
+  void DrawTriangle3D(simd_float3 p0, simd_float3 p1, simd_float3 p2, simd_float4 color) override
+  {
+    [draw3d_ drawTriangle:p0 p1:p1 p2:p2 color:color];
+  }
   void DrawPlane3D(simd_float3 p0, simd_float3 p1, simd_float3 p2, simd_float3 p3,
                    simd_float4 color) override
   {

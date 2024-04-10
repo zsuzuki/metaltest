@@ -62,9 +62,9 @@ public:
     tgt        = base + tgt * 100.0f;
 
     ctx.DrawLine(base, tgt, {1, 1, 1, 1});
-    cnt++;
 
     {
+      // test 3D
       static auto look   = simd_make_float3(0.0f, 0.0f, 0.0f);
       simd_float3 eye    = simd_make_float3(10.0f, 7.0f, 10.0f);
       simd_float3 up     = simd_make_float3(0.0f, 1.0f, 0.0f);
@@ -80,6 +80,12 @@ public:
       ctx.DrawLine3D(p2, p3, {1, 1, 1, 1});
       ctx.DrawLine3D(p3, p0, {1, 1, 1, 1});
       ctx.DrawPlane3D(p0, p1, p2, p3, {0.1, 0.1, 0.5, 1});
+      float deg2 = (((cnt + 120) % 360) / 360.0f) * M_PI * 2.0f;
+      float deg3 = (((cnt + 240) % 360) / 360.0f) * M_PI * 2.0f;
+      auto  tp0  = simd_make_float3(std::sinf(deg), 1.0f, std::cosf(deg));
+      auto  tp1  = simd_make_float3(std::sinf(deg2), 1.0f, std::cosf(deg2));
+      auto  tp2  = simd_make_float3(std::sinf(deg3), 1.0f, std::cosf(deg3));
+      ctx.DrawTriangle3D(tp0, tp1, tp2, {1, 0, 0, 1});
     }
 
     GamePad::GetPadState(0, padState_);
@@ -103,6 +109,7 @@ public:
         }
       }
     }
+    cnt++;
   }
 };
 
