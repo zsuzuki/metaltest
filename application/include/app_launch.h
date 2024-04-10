@@ -6,6 +6,8 @@
 #include <memory>
 #include <simd/vector_types.h>
 
+class CameraData;
+
 //
 class ApplicationContext
 {
@@ -14,12 +16,21 @@ public:
   ApplicationContext()          = default;
   virtual ~ApplicationContext() = default;
 
+  // text
   virtual void Print(const char *msg, float x, float y)                      = 0;
   virtual void SetTextColor(float red, float green, float blue, float alpha) = 0;
 
+  // 2D
   virtual void DrawLine(simd_float2 from, simd_float2 to, simd_float4 color) = 0;
   virtual void DrawRect(simd_float2 from, simd_float2 to, simd_float4 color) = 0;
   virtual void FillRect(simd_float2 from, simd_float2 to, simd_float4 color) = 0;
+
+  // 3D
+  virtual CameraData &GetCamera() = 0;
+
+  virtual void DrawLine3D(simd_float3 from, simd_float3 to, simd_float4 color) = 0;
+  virtual void DrawPlane3D(simd_float3 p0, simd_float3 p1, simd_float3 p2, simd_float3 p3,
+                           simd_float4 color)                                  = 0;
 };
 
 //

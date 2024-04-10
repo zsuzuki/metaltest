@@ -3,6 +3,7 @@
 //
 #include <app_launch.h>
 #include <array>
+#include <camera.h>
 #include <cmath>
 #include <format>
 #include <game_pad.h>
@@ -62,6 +63,24 @@ public:
 
     ctx.DrawLine(base, tgt, {1, 1, 1, 1});
     cnt++;
+
+    {
+      static auto look   = simd_make_float3(0.0f, 0.0f, 0.0f);
+      simd_float3 eye    = simd_make_float3(10.0f, 7.0f, 10.0f);
+      simd_float3 up     = simd_make_float3(0.0f, 1.0f, 0.0f);
+      auto       &camera = ctx.GetCamera();
+      camera.buildModelView(eye, look, up);
+
+      auto p0 = simd_make_float3(5.0f, 0.0f, 5.0f);
+      auto p1 = simd_make_float3(-5.0f, 0.0f, 5.0f);
+      auto p2 = simd_make_float3(-5.0f, 0.0f, -5.0f);
+      auto p3 = simd_make_float3(5.0f, 0.0f, -5.0f);
+      ctx.DrawLine3D(p0, p1, {1, 1, 1, 1});
+      ctx.DrawLine3D(p1, p2, {1, 1, 1, 1});
+      ctx.DrawLine3D(p2, p3, {1, 1, 1, 1});
+      ctx.DrawLine3D(p3, p0, {1, 1, 1, 1});
+      ctx.DrawPlane3D(p0, p1, p2, p3, {0.1, 0.1, 0.5, 1});
+    }
 
     GamePad::GetPadState(0, padState_);
     if (padState_.enabled_)

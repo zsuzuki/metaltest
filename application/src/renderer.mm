@@ -16,7 +16,9 @@ static const NSUInteger MaxBuffersInFlight = 3;
 class AppCtx : public ApplicationContext
 {
 public:
-  Draw2D *draw2d_;
+  Draw2D     *draw2d_;
+  Draw3D     *draw3d_;
+  CameraData *camera_;
 
   AppCtx()           = default;
   ~AppCtx() override = default;
@@ -41,6 +43,18 @@ public:
   void FillRect(simd_float2 from, simd_float2 to, simd_float4 color) override
   {
     [draw2d_ fillRect:from to:to color:color];
+  }
+
+  CameraData &GetCamera() override { return *camera_; }
+
+  void DrawLine3D(simd_float3 from, simd_float3 to, simd_float4 color) override
+  {
+    [draw3d_ drawLine:from to:to color:color];
+  }
+  void DrawPlane3D(simd_float3 p0, simd_float3 p1, simd_float3 p2, simd_float3 p3,
+                   simd_float4 color) override
+  {
+    [draw3d_ drawPlane:p0 p1:p1 p2:p2 p3:p3 color:color];
   }
 };
 
@@ -129,6 +143,8 @@ public:
 
   AppCtx appctx;
   appctx.draw2d_ = draw2d_;
+  appctx.draw3d_ = draw3d_;
+  appctx.camera_ = &camera_;
   appLoop_->Update(appctx);
 
   // render
