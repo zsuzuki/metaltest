@@ -113,6 +113,7 @@ NSMenu *createMenu();
 - (void)quitCallback:(NSObject *)sender
 {
   //   NSLog(@"Quit Push");
+  appLoop_->WillCloseWindow();
   auto app = [NSApplication sharedApplication];
   [app terminate:sender];
 }
