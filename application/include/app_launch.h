@@ -44,6 +44,8 @@ public:
 
   // start window size
   virtual void InitialWindowSize(double &width, double &height) {}
+  // to close window
+  virtual void WillCloseWindow() {}
   // window clear color
   virtual void WindowClearColor(double &red, double &green, double &blue, double &alpha) {}
   // resize window

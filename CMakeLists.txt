@@ -74,6 +74,7 @@ endforeach(RFILES ${resources_files})
 #
 set_source_files_properties(${SHADERS_LIB} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/shaders")
 # シェーダーライブラリのコピー
+add_dependencies(${PROJECT_NAME} shaders)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${SHADERS_LIB}

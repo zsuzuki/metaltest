@@ -32,15 +32,16 @@ public:
 
   void InitialWindowSize(double &width, double &height) override
   {
-    std::cout << std::format("Default window size: {} x {}", width, height) << std::endl;
+    std::cout << std::format("Default window size: {} x {}\n", width, height);
     width  = WindowWidth;
     height = WindowHeight;
   }
 
+  void WillCloseWindow() override { std::cout << std::format("To Close Window\n"); }
+
   void WindowClearColor(double &red, double &green, double &blue, double &alpha) override
   {
-    std::cout << std::format("Default clear color: R={} G={} B={} A={}", red, green, blue, alpha)
-              << std::endl;
+    std::cout << std::format("Default clear color: R={} G={} B={} A={}\n", red, green, blue, alpha);
     blue = 0.05;
   }
 
