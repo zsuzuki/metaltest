@@ -20,7 +20,12 @@ add_subdirectory(shaders)
 add_subdirectory(application)
 add_subdirectory(functions)
 
-add_executable(${PROJECT_NAME} ${SOURCES} shaders)
+set(MACOSX_BUNDLE_ICON_FILE metaltest.icns)
+set(app_icon ${CMAKE_CURRENT_SOURCE_DIR}/resources/metaltest.icns)
+set_source_files_properties(${app_icon} PROPERTIES
+       MACOSX_PACKAGE_LOCATION "Resources")
+
+add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${app_icon} ${SOURCES} shaders)
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         application
