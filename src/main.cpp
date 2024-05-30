@@ -10,6 +10,7 @@
 #include <iostream>
 #include <memory>
 #include <simd/vector_make.h>
+#include <sprite4cpp.h>
 
 namespace
 {
@@ -26,6 +27,8 @@ class MainLoop : public ApplicationLoop
 
   GamePad::PadState padState_;
 
+  std::shared_ptr<SpriteCpp> sprite_;
+
 public:
   MainLoop()           = default;
   ~MainLoop() override = default;
@@ -37,7 +40,14 @@ public:
     height = WindowHeight;
   }
 
-  void WillCloseWindow() override { std::cout << std::format("To Close Window\n"); }
+  void WillCloseWindow() override
+  {
+    if (sprite_)
+    {
+      sprite_.reset();
+    }
+    std::cout << std::format("To Close Window\n");
+  }
 
   void WindowClearColor(double &red, double &green, double &blue, double &alpha) override
   {
@@ -110,6 +120,13 @@ public:
         }
       }
     }
+
+    if (!sprite_)
+    {
+      sprite_ = ctx.CreateSprite("images/szlogo.png");
+    }
+    ctx.DrawSprite(sprite_);
+
     cnt++;
   }
 };

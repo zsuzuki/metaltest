@@ -7,12 +7,41 @@
 #import "draw2d.h"
 #import "draw3d.h"
 #import "sprite.h"
-#include <Metal/Metal.h>
+#include "sprite4cpp.h"
+#import <Metal/Metal.h>
 #include <memory>
 #import <simd/simd.h>
 
 static const NSUInteger MaxBuffersInFlight = 3;
 
+//
+class SpriteImpl : public SpriteCpp
+{
+  NSArray<Sprite *> *sprPtr_;
+
+public:
+  SpriteImpl(NSArray<Sprite *> *sprl) : sprPtr_(sprl) {}
+  ~SpriteImpl() override
+  {
+    [sprPtr_[0] release];
+    [sprPtr_ release];
+  }
+
+  bool IsLoaded() const override { return [sprPtr_ count] > 0 && sprPtr_[0]; }
+
+  void SetAlign(Align align) override { sprPtr_[0].align = (SpriteAlign)align; }
+  void SetScale(float scale) override { sprPtr_[0].scale = scale; }
+  void SetRotate(float rotate) override { sprPtr_[0].rotate = rotate; }
+  void SetPosition(float x, float y) override { sprPtr_[0].position = simd_make_float2(x, y); }
+  void SetFaceColor(float red, float green, float blue, float alpha) override
+  {
+    sprPtr_[0].color = simd_make_float4(red, green, blue, alpha);
+  }
+
+  Sprite *GetSprite() { return sprPtr_[0]; }
+};
+
+//
 class AppCtx : public ApplicationContext
 {
 public:
@@ -59,6 +88,29 @@ public:
                    simd_float4 color) override
   {
     [draw3d_ drawPlane:p0 p1:p1 p2:p2 p3:p3 color:color];
+  }
+
+  SpritePtr CreateSprite(std::string fname) override
+  {
+    auto fnstr = [NSString stringWithUTF8String:fname.c_str()];
+
+    NSArray<NSString *> *fnarr = @[ fnstr ];
+
+    if (auto sprList = [draw2d_ createSprites:fnarr])
+    {
+      return std::make_shared<SpriteImpl>(sprList);
+    }
+    return {};
+  }
+  void DrawSprite(SpritePtr spr) override
+  {
+    if (auto spri = std::dynamic_pointer_cast<SpriteImpl>(spr))
+    {
+      if (spri->IsLoaded())
+      {
+        [draw2d_ drawSprite:spri->GetSprite()];
+      }
+    }
   }
 };
 

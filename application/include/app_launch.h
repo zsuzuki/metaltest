@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include "sprite4cpp.h"
 #include <memory>
 #include <simd/vector_types.h>
 
@@ -24,6 +25,10 @@ public:
   virtual void DrawLine(simd_float2 from, simd_float2 to, simd_float4 color) = 0;
   virtual void DrawRect(simd_float2 from, simd_float2 to, simd_float4 color) = 0;
   virtual void FillRect(simd_float2 from, simd_float2 to, simd_float4 color) = 0;
+
+  using SpritePtr                                   = std::shared_ptr<SpriteCpp>;
+  virtual SpritePtr CreateSprite(std::string fname) = 0;
+  virtual void      DrawSprite(SpritePtr spr)       = 0;
 
   // 3D
   virtual CameraData &GetCamera() = 0;
