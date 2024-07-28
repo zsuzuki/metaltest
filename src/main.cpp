@@ -9,6 +9,7 @@
 #include <game_pad.h>
 #include <iostream>
 #include <memory>
+#include <simd/quaternion.h>
 #include <simd/vector_make.h>
 #include <sprite4cpp.h>
 
@@ -102,17 +103,31 @@ public:
     GamePad::GetPadState(0, padState_);
     if (padState_.enabled_)
     {
-      std::array<bool, 4> btn{};
+      static simd_float3 tpos = simd_make_float3(0.0f, 2.0f, 0.0f);
+      static float       rotY = 0.0f;
+      rotY += (padState_.triggerL - padState_.triggerR) * 0.1f;
+      auto rotQ = simd_quaternion(rotY, simd_make_float3(0.0f, 1.0f, 0.0f));
+      tpos += simd_act(rotQ, simd_make_float3(-padState_.leftX, 0.0f, padState_.leftY)) * 0.05f;
+      auto tp0 = simd_act(rotQ, simd_make_float3(0.0f, 0.0f, 1.0f)) + tpos;
+      auto tp1 = simd_act(rotQ, simd_make_float3(1.0f, 0.0f, 0.0f)) + tpos;
+      auto tp2 = simd_act(rotQ, simd_make_float3(-1.0f, 0.0f, 0.0f)) + tpos;
+      ctx.DrawTriangle3D(tp0, tp1, tp2, {1, 1, 0, 1});
+
+      std::array<bool, 8> btn{};
       btn[0]      = padState_.buttonA.Pressed();
       btn[1]      = padState_.buttonB.Pressed();
       btn[2]      = padState_.buttonC.Pressed();
       btn[3]      = padState_.buttonD.Pressed();
+      btn[4]      = padState_.shoulderL.Pressed();
+      btn[5]      = padState_.shoulderR.Pressed();
+      btn[6]      = padState_.thumbL.Pressed();
+      btn[7]      = padState_.thumbR.Pressed();
       auto  color = simd_make_float4(0, 1, 0, 1);
       float y     = 100;
       for (int i = 0; i < btn.size(); i++)
       {
-        auto p1 = simd_make_float2(900, y + i * 60);
-        auto p2 = simd_make_float2(950, y + 50 + i * 60);
+        auto p1 = simd_make_float2(1200, y + i * 60);
+        auto p2 = simd_make_float2(1250, y + 50 + i * 60);
         ctx.DrawRect(p1, p2, {1, 1, 1, 1});
         if (btn[i])
         {

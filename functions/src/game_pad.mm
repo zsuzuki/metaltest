@@ -78,11 +78,14 @@ bool GetPadState(int idx, PadState &state)
   setupButton(state.buttonDown, input.dpad.down);
   setupButton(state.buttonLeft, input.dpad.left);
   setupButton(state.buttonRight, input.dpad.right);
+  setupButton(state.thumbL, input.leftThumbstickButton);
+  setupButton(state.thumbR, input.rightThumbstickButton);
 
   auto analogValue = [](float value)
   {
-    constexpr float lim = 0.1f;
-    return value > lim ? value - lim : value < -lim ? value + lim : 0.0f;
+    constexpr float lim   = 0.1f;
+    constexpr float range = 1.0f - lim;
+    return value > lim ? (value - lim) / range : value < -lim ? (value + lim) / range : 0.0f;
   };
   auto lStick    = input.leftThumbstick;
   auto rStick    = input.rightThumbstick;

@@ -47,6 +47,8 @@ public:
   Button buttonB;
   Button buttonC;
   Button buttonD;
+  Button thumbL;
+  Button thumbR;
   Button shoulderL;
   Button shoulderR;
   Button buttonMenu;
