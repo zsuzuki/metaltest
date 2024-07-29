@@ -2,6 +2,7 @@
 // Copyright 2024 Y.Suzuki(wave.suzuki.z@gmail.com)
 //
 #include <app_launch.h>
+#include <arm_neon.h>
 #include <array>
 #include <camera.h>
 #include <cmath>
@@ -108,6 +109,10 @@ public:
       rotY += (padState_.triggerL - padState_.triggerR) * 0.1f;
       auto rotQ = simd_quaternion(rotY, simd_make_float3(0.0f, 1.0f, 0.0f));
       tpos += simd_act(rotQ, simd_make_float3(-padState_.leftX, 0.0f, padState_.leftY)) * 0.05f;
+      auto npos = vmaxq_f32(float32x4_t{tpos.x, tpos.y, tpos.z, 0.0f}, vdupq_n_f32(-8.0f));
+      npos      = vminq_f32(npos, vdupq_n_f32(8.0f));
+      tpos      = simd_make_float3(npos[0], npos[1], npos[2]);
+
       auto tp0 = simd_act(rotQ, simd_make_float3(0.0f, 0.0f, 1.0f)) + tpos;
       auto tp1 = simd_act(rotQ, simd_make_float3(1.0f, 0.0f, 0.0f)) + tpos;
       auto tp2 = simd_act(rotQ, simd_make_float3(-1.0f, 0.0f, 0.0f)) + tpos;
