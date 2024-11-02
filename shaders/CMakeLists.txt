@@ -15,7 +15,7 @@ set(src
 set(shaderfiles "")
 foreach(FILE ${src})
   get_filename_component(FILE_WE ${FILE} NAME_WE)
-  set(INFILE ${CMAKE_SOURCE_DIR}/shaders/${FILE})
+  set(INFILE ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
   set(OUTFILE ${FILE_WE}.ir)
   add_custom_command(OUTPUT ${OUTFILE}
                      COMMAND xcrun -sdk macosx metal -o ${OUTFILE} -c ${INFILE}
