@@ -53,6 +53,8 @@ public:
   Button shoulderR;
   Button buttonMenu;
   Button buttonOptions;
+  Button buttonGripRight;
+  Button buttonGripLeft;
   float  leftX;
   float  leftY;
   float  rightX;

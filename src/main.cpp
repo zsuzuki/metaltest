@@ -141,6 +141,30 @@ public:
       }
     }
 
+    auto drawan = [&](float val, float y)
+    {
+      if (val != 0.0)
+      {
+        float lx = val < 0 ? val : 0.0;
+        float rx = val > 0 ? val : 0.0;
+        lx       = lx * 300.0 + 450.0;
+        rx       = rx * 300.0 + 450.0;
+        ctx.FillRect({lx, y}, {rx, y + 30}, {0.5, 1, 0.5, 1});
+      }
+    };
+    drawan(padState_.triggerL, 650);
+    drawan(padState_.triggerR, 700);
+
+    auto anbase = simd_make_float2(300, 500);
+    ctx.DrawPolygon(anbase, 100, 0, 20, {1, 1, 1, 1});
+    auto an0pos = simd_make_float2(padState_.leftX, -padState_.leftY) * 100 + anbase;
+    ctx.DrawLine(anbase, an0pos, {0, 1, 0, 1});
+
+    anbase.x += 350;
+    ctx.DrawPolygon(anbase, 100, 0, 20, {1, 0.5, 0.5, 1});
+    auto an1pos = simd_make_float2(padState_.rightX, -padState_.rightY) * 100 + anbase;
+    ctx.DrawLine(anbase, an1pos, {0, 1, 0, 1});
+
     if (!sprite_)
     {
       sprite_ = ctx.CreateSprite("images/szlogo.png");

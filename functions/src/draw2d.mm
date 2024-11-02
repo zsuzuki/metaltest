@@ -8,6 +8,7 @@
 #import "texture.h"
 #import <Metal/Metal.h>
 #include <arm_neon.h>
+#include <cmath>
 #include <list>
 #include <memory>
 #include <simd/simd.h>
@@ -115,6 +116,40 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
   vtx2d[7].color    = col16;
 
   nbPrimitives_ += 8;
+}
+
+- (void)drawPolygon:(simd_float2)pos
+             radius:(float)rad
+             rotate:(float)rot
+           numSides:(int)sides
+              color:(simd_float4)color
+{
+  if (sides < 3)
+  {
+    return;
+  }
+
+  auto  vtx   = vertices_[pageIndex_];
+  auto *vtx2d = (VertexDataPrim2D *)vtx.contents + nbPrimitives_;
+
+  auto col16 = vcvt_f16_f32(color);
+
+  float step = (M_PI * 2) / (float)sides;
+  for (int sidx = 0; sidx < sides; sidx++)
+  {
+    auto rot1 = (float)sidx * step + rot;
+    auto rot2 = (float)(sidx + 1) * step + rot;
+    auto pos1 = simd_make_float2(std::sin(rot1), std::cos(rot1));
+    auto pos2 = simd_make_float2(std::sin(rot2), std::cos(rot2));
+
+    (*vtx2d).position = (pos1 * rad + pos) * contentScale_;
+    (*vtx2d).color    = col16;
+    vtx2d++;
+    (*vtx2d).position = (pos2 * rad + pos) * contentScale_;
+    (*vtx2d).color    = col16;
+    vtx2d++;
+    nbPrimitives_ += 2;
+  }
 }
 
 - (void)fillRect:(simd_float2)from to:(simd_float2)to color:(simd_float4)color

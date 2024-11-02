@@ -17,6 +17,11 @@
 - (void)print:(nonnull NSString *)message x:(CGFloat)x y:(CGFloat)y;
 - (void)drawLine:(simd_float2)from to:(simd_float2)to color:(simd_float4)color;
 - (void)drawRect:(simd_float2)from to:(simd_float2)to color:(simd_float4)color;
+- (void)drawPolygon:(simd_float2)pos
+             radius:(float)rad
+             rotate:(float)rot
+           numSides:(int)sides
+              color:(simd_float4)color;
 - (void)fillRect:(simd_float2)from to:(simd_float2)to color:(simd_float4)color;
 - (nonnull NSArray<Sprite *> *)createSprites:(nonnull NSArray<NSString *> *)fileList;
 - (nonnull NSArray<Sprite *> *)createSpritesByImage:(nonnull NSArray<NSString *> *)fileList;
