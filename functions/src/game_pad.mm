@@ -43,17 +43,28 @@ void PadState::updateRepeat(Button &btn) { btn.updateRepeat(repeatCount_, repeat
 //
 bool GetPadState(int idx, PadState &state)
 {
-  auto const padArray = [GCController controllers];
+  GCExtendedGamepad *input  = Nil;
+  GCMotion          *motion = Nil;
 
-  if (idx < 0 || idx >= padArray.count)
+  for (GCController *controller in GCController.controllers)
   {
-    state.enabled_ = false;
-    return false;
+    if (controller.extendedGamepad)
+    {
+      if (idx == 0)
+      {
+        input = controller.extendedGamepad;
+        [controller setPlayerIndex:GCControllerPlayerIndex1];
+        motion = controller.motion;
+        break;
+      }
+      else
+      {
+        idx--;
+      }
+    }
   }
 
-  auto pad   = padArray[idx];
-  auto input = [pad extendedGamepad];
-  if (input == nullptr)
+  if (input == Nil)
   {
     state.enabled_ = false;
     return false;
@@ -81,6 +92,12 @@ bool GetPadState(int idx, PadState &state)
   setupButton(state.thumbL, input.leftThumbstickButton);
   setupButton(state.thumbR, input.rightThumbstickButton);
 
+  if ([input isKindOfClass:[GCDualShockGamepad class]])
+  {
+    GCDualShockGamepad *dualShock = (GCDualShockGamepad *)input;
+    setupButton(state.buttonTouch, dualShock.touchpadButton);
+  }
+
   auto analogValue = [](float value)
   {
     constexpr float lim   = 0.1f;
@@ -95,6 +112,28 @@ bool GetPadState(int idx, PadState &state)
   state.rightY   = analogValue(rStick.yAxis.value);
   state.triggerL = analogValue(input.leftTrigger.analog ? input.leftTrigger.value : 0.0f);
   state.triggerR = analogValue(input.rightTrigger.analog ? input.rightTrigger.value : 0.0f);
+
+  if (motion != Nil)
+  {
+    auto att           = [motion attitude];
+    state.posture      = simd_quaternion((float)att.x, (float)att.y, (float)att.z, (float)att.w);
+    auto rot           = [motion rotationRate];
+    state.rotation     = simd_make_float3(rot.x, rot.y, rot.z);
+    auto acc           = [motion acceleration];
+    state.acceleration = simd_make_float3(acc.x, acc.y, acc.z);
+
+    motion.valueChangedHandler = ^(GCMotion *motion) {
+      NSLog(@"Gravity: %f, %f, %f", motion.gravity.x, motion.gravity.y, motion.gravity.z);
+      NSLog(@"User Acceleration: %f, %f, %f",
+            motion.userAcceleration.x,
+            motion.userAcceleration.y,
+            motion.userAcceleration.z);
+      NSLog(@"Rotation Rate: %f, %f, %f",
+            motion.rotationRate.x,
+            motion.rotationRate.y,
+            motion.rotationRate.z);
+    };
+  }
 
   return true;
 }

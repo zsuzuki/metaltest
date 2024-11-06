@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cinttypes>
+#include <simd/simd.h>
 
 namespace GamePad
 {
@@ -53,14 +54,17 @@ public:
   Button shoulderR;
   Button buttonMenu;
   Button buttonOptions;
-  Button buttonGripRight;
-  Button buttonGripLeft;
+  Button buttonTouch;
   float  leftX;
   float  leftY;
   float  rightX;
   float  rightY;
   float  triggerL;
   float  triggerR;
+
+  simd_float3 acceleration;
+  simd_float3 rotation;
+  simd_quatf  posture;
 
   void updateRepeat(Button &btn);
 

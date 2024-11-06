@@ -118,7 +118,7 @@ public:
       auto tp2 = simd_act(rotQ, simd_make_float3(-1.0f, 0.0f, 0.0f)) + tpos;
       ctx.DrawTriangle3D(tp0, tp1, tp2, {1, 1, 0, 1});
 
-      std::array<bool, 8> btn{};
+      std::array<bool, 11> btn{};
       btn[0]      = padState_.buttonA.Pressed();
       btn[1]      = padState_.buttonB.Pressed();
       btn[2]      = padState_.buttonC.Pressed();
@@ -127,6 +127,9 @@ public:
       btn[5]      = padState_.shoulderR.Pressed();
       btn[6]      = padState_.thumbL.Pressed();
       btn[7]      = padState_.thumbR.Pressed();
+      btn[8]      = padState_.buttonMenu.Pressed();
+      btn[9]      = padState_.buttonOptions.Pressed();
+      btn[10]     = padState_.buttonTouch.Pressed();
       auto  color = simd_make_float4(0, 1, 0, 1);
       float y     = 100;
       for (int i = 0; i < btn.size(); i++)
@@ -139,31 +142,62 @@ public:
           ctx.FillRect(p1, p2, color);
         }
       }
-    }
 
-    auto drawan = [&](float val, float y)
-    {
-      if (val != 0.0)
+      // dpad
+      auto drawdp = [&](bool val, float x, float y)
       {
-        float lx = val < 0 ? val : 0.0;
-        float rx = val > 0 ? val : 0.0;
-        lx       = lx * 300.0 + 450.0;
-        rx       = rx * 300.0 + 450.0;
-        ctx.FillRect({lx, y}, {rx, y + 30}, {0.5, 1, 0.5, 1});
-      }
-    };
-    drawan(padState_.triggerL, 650);
-    drawan(padState_.triggerR, 700);
+        auto p1 = simd_make_float2(x - 20, y - 20);
+        auto p2 = simd_make_float2(x + 20, y + 20);
+        ctx.DrawRect(p1, p2, {1, 1, 1, 1});
+        if (val)
+        {
+          p1 += 2;
+          p2 -= 2;
+          ctx.FillRect(p1, p2, color);
+        }
+      };
+      drawdp(padState_.buttonLeft.Pressed(), 900, 500);
+      drawdp(padState_.buttonRight.Pressed(), 1000, 500);
+      drawdp(padState_.buttonUp.Pressed(), 950, 450);
+      drawdp(padState_.buttonDown.Pressed(), 950, 550);
 
-    auto anbase = simd_make_float2(300, 500);
-    ctx.DrawPolygon(anbase, 100, 0, 20, {1, 1, 1, 1});
-    auto an0pos = simd_make_float2(padState_.leftX, -padState_.leftY) * 100 + anbase;
-    ctx.DrawLine(anbase, an0pos, {0, 1, 0, 1});
+      // stick circle
+      auto drawan = [&](float val, float y)
+      {
+        if (val != 0.0)
+        {
+          float lx = val < 0 ? val : 0.0;
+          float rx = val > 0 ? val : 0.0;
+          lx       = lx * 300.0 + 450.0;
+          rx       = rx * 300.0 + 450.0;
+          ctx.FillRect({lx, y}, {rx, y + 30}, {0.5, 1, 0.5, 1});
+        }
+      };
+      drawan(padState_.triggerL, 650);
+      drawan(padState_.triggerR, 700);
 
-    anbase.x += 350;
-    ctx.DrawPolygon(anbase, 100, 0, 20, {1, 0.5, 0.5, 1});
-    auto an1pos = simd_make_float2(padState_.rightX, -padState_.rightY) * 100 + anbase;
-    ctx.DrawLine(anbase, an1pos, {0, 1, 0, 1});
+      auto anbase = simd_make_float2(300, 500);
+      ctx.DrawPolygon(anbase, 100, 0, 20, {1, 1, 1, 1});
+      auto an0pos = simd_make_float2(padState_.leftX, -padState_.leftY) * 100 + anbase;
+      ctx.DrawLine(anbase, an0pos, {0, 1, 0, 1});
+
+      anbase.x += 350;
+      ctx.DrawPolygon(anbase, 100, 0, 20, {1, 0.5, 0.5, 1});
+      auto an1pos = simd_make_float2(padState_.rightX, -padState_.rightY) * 100 + anbase;
+      ctx.DrawLine(anbase, an1pos, {0, 1, 0, 1});
+
+      // motion
+      auto center = simd_make_float3(0.0f, 5.0f, 0.0f);
+      auto xaxs   = simd_make_float3(2.0f, 0.0f, 0.0f);
+      auto yaxs   = simd_make_float3(0.0f, 2.0f, 0.0f);
+      auto zaxs   = simd_make_float3(0.0f, 0.0f, 2.0f);
+      xaxs        = simd_act(padState_.posture, xaxs) + center;
+      yaxs        = simd_act(padState_.posture, yaxs) + center;
+      zaxs        = simd_act(padState_.posture, zaxs) + center;
+      ctx.DrawLine3D(center, xaxs, {1.0f, 0.0f, 0.0f, 1.0f});
+      ctx.DrawLine3D(center, yaxs, {0.0f, 1.0f, 0.0f, 1.0f});
+      ctx.DrawLine3D(center, zaxs, {0.0f, 0.0f, 1.0f, 1.0f});
+    }
 
     if (!sprite_)
     {
