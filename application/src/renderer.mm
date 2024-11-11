@@ -73,6 +73,10 @@ public:
   {
     [draw2d_ drawPolygon:pos radius:rad rotate:rot numSides:sides color:color];
   }
+  void FillPolygon(simd_float2 pos, float rad, float rot, int sides, simd_float4 color) override
+  {
+    [draw2d_ fillPolygon:pos radius:rad rotate:rot numSides:sides color:color];
+  }
 
   void FillRect(simd_float2 from, simd_float2 to, simd_float4 color) override
   {

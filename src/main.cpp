@@ -177,11 +177,19 @@ public:
       drawan(padState_.triggerR, 700);
 
       auto anbase = simd_make_float2(300, 500);
+      if (padState_.thumbL.Pressed())
+      {
+        ctx.FillPolygon(anbase, 80, 0, 20, {1.0f, 0.9f, 0.0f, 0.3f});
+      }
       ctx.DrawPolygon(anbase, 100, 0, 20, {1, 1, 1, 1});
       auto an0pos = simd_make_float2(padState_.leftX, -padState_.leftY) * 100 + anbase;
       ctx.DrawLine(anbase, an0pos, {0, 1, 0, 1});
 
       anbase.x += 350;
+      if (padState_.thumbR.Pressed())
+      {
+        ctx.FillPolygon(anbase, 80, 0, 20, {1.0f, 0.9f, 0.0f, 0.3f});
+      }
       ctx.DrawPolygon(anbase, 100, 0, 20, {1, 0.5, 0.5, 1});
       auto an1pos = simd_make_float2(padState_.rightX, -padState_.rightY) * 100 + anbase;
       ctx.DrawLine(anbase, an1pos, {0, 1, 0, 1});

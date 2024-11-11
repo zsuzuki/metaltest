@@ -177,6 +177,43 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
   nbFillPrimitives_ += 6;
 }
 
+- (void)fillPolygon:(simd_float2)pos
+             radius:(float)rad
+             rotate:(float)rot
+           numSides:(int)sides
+              color:(simd_float4)color
+{
+  if (sides < 3)
+  {
+    return;
+  }
+
+  auto  vtx   = fillVertices_[pageIndex_];
+  auto *vtx2d = (VertexDataPrim2D *)vtx.contents + nbFillPrimitives_;
+
+  auto col16 = vcvt_f16_f32(color);
+
+  float step = (M_PI * 2) / (float)sides;
+  for (int sidx = 0; sidx < sides; sidx++)
+  {
+    auto rot1 = (float)sidx * step + rot;
+    auto rot2 = (float)(sidx + 1) * step + rot;
+    auto pos1 = simd_make_float2(std::sin(rot1), std::cos(rot1));
+    auto pos2 = simd_make_float2(std::sin(rot2), std::cos(rot2));
+
+    (*vtx2d).position = pos * contentScale_;
+    (*vtx2d).color    = col16;
+    vtx2d++;
+    (*vtx2d).position = (pos1 * rad + pos) * contentScale_;
+    (*vtx2d).color    = col16;
+    vtx2d++;
+    (*vtx2d).position = (pos2 * rad + pos) * contentScale_;
+    (*vtx2d).color    = col16;
+    vtx2d++;
+    nbFillPrimitives_ += 3;
+  }
+}
+
 // テキスト描画カラー
 - (void)setTextColorRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha
 {

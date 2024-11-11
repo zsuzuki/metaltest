@@ -26,6 +26,7 @@ public:
   virtual void DrawRect(simd_float2 from, simd_float2 to, simd_float4 color)                    = 0;
   virtual void FillRect(simd_float2 from, simd_float2 to, simd_float4 color)                    = 0;
   virtual void DrawPolygon(simd_float2 pos, float rad, float rot, int sides, simd_float4 color) = 0;
+  virtual void FillPolygon(simd_float2 pos, float rad, float rot, int sides, simd_float4 color) = 0;
 
   using SpritePtr                                   = std::shared_ptr<SpriteCpp>;
   virtual SpritePtr CreateSprite(std::string fname) = 0;
