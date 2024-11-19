@@ -122,17 +122,17 @@ bool GetPadState(int idx, PadState &state)
     auto acc           = [motion acceleration];
     state.acceleration = simd_make_float3(acc.x, acc.y, acc.z);
 
-    motion.valueChangedHandler = ^(GCMotion *motion) {
-      NSLog(@"Gravity: %f, %f, %f", motion.gravity.x, motion.gravity.y, motion.gravity.z);
-      NSLog(@"User Acceleration: %f, %f, %f",
-            motion.userAcceleration.x,
-            motion.userAcceleration.y,
-            motion.userAcceleration.z);
-      NSLog(@"Rotation Rate: %f, %f, %f",
-            motion.rotationRate.x,
-            motion.rotationRate.y,
-            motion.rotationRate.z);
-    };
+    // motion.valueChangedHandler = ^(GCMotion *motion) {
+    //   NSLog(@"Gravity: %f, %f, %f", motion.gravity.x, motion.gravity.y, motion.gravity.z);
+    //   NSLog(@"User Acceleration: %f, %f, %f",
+    //         motion.userAcceleration.x,
+    //         motion.userAcceleration.y,
+    //         motion.userAcceleration.z);
+    //   NSLog(@"Rotation Rate: %f, %f, %f",
+    //         motion.rotationRate.x,
+    //         motion.rotationRate.y,
+    //         motion.rotationRate.z);
+    // };
   }
 
   return true;
