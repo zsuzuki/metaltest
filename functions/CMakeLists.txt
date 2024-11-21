@@ -16,6 +16,7 @@ set(SOURCES
   src/draw3d.mm
   src/font_render.mm
   src/game_pad.mm
+  src/keyboard.mm
   src/texture.mm
 )
 

@@ -9,6 +9,7 @@
 #include <format>
 #include <game_pad.h>
 #include <iostream>
+#include <keyboard.h>
 #include <memory>
 #include <simd/quaternion.h>
 #include <simd/vector_make.h>
@@ -64,6 +65,10 @@ public:
 
   void Update(ApplicationContext &ctx) override
   {
+    Keyboard::Fetch(
+        [](Keyboard::KeyCode code, bool press)
+        { std::cout << "Key Event: " << (int)code << ", " << (press ? "On" : "Off") << "\n"; });
+
     static int cnt   = 0;
     auto       hello = std::format("こんにちは: {}", cnt);
     ctx.Print(hello.c_str(), 200, 200);
