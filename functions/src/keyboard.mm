@@ -14,7 +14,7 @@ namespace Keyboard
 std::map<GCKeyCode, KeyCode> keycodeMap = {
     {GCKeyCodeSpacebar, KeyCode::SPC},
     {GCKeyCodeUpArrow, KeyCode::UP},
-    {GCKeyCodeDownArrow, KeyCode::SPC},
+    {GCKeyCodeDownArrow, KeyCode::DOWN},
     {GCKeyCodeLeftArrow, KeyCode::LEFT},
     {GCKeyCodeRightArrow, KeyCode::RIGHT},
     {GCKeyCodePageUp, KeyCode::PGUP},
