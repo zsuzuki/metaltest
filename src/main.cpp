@@ -28,7 +28,11 @@ constexpr double WindowHeight = 800.0;
 class MainLoop : public ApplicationLoop
 {
 
-  GamePad::PadState padState_;
+  GamePad::PadState padState_{};
+  bool              onKeyW_ = false;
+  bool              onKeyA_ = false;
+  bool              onKeyS_ = false;
+  bool              onKeyD_ = false;
 
   std::shared_ptr<SpriteCpp> sprite_;
 
@@ -66,8 +70,27 @@ public:
   void Update(ApplicationContext &ctx) override
   {
     Keyboard::Fetch(
-        [](Keyboard::KeyCode code, bool press)
-        { std::cout << "Key Event: " << (int)code << ", " << (press ? "On" : "Off") << "\n"; });
+        [&](Keyboard::KeyCode code, bool press)
+        {
+          switch (code)
+          {
+          case Keyboard::KeyCode::W:
+            onKeyW_ = press;
+            break;
+          case Keyboard::KeyCode::A:
+            onKeyA_ = press;
+            break;
+          case Keyboard::KeyCode::S:
+            onKeyS_ = press;
+            break;
+          case Keyboard::KeyCode::D:
+            onKeyD_ = press;
+            break;
+          default:
+            std::cout << "Key Event: " << (int)code << ", " << (press ? "On" : "Off") << "\n";
+            break;
+          }
+        });
 
     static int cnt   = 0;
     auto       hello = std::format("こんにちは: {}", cnt);
@@ -107,6 +130,10 @@ public:
     }
 
     GamePad::GetPadState(0, padState_);
+    padState_.buttonUp.overridePress(onKeyW_);
+    padState_.buttonLeft.overridePress(onKeyA_);
+    padState_.buttonDown.overridePress(onKeyS_);
+    padState_.buttonRight.overridePress(onKeyD_);
     if (padState_.enabled_)
     {
       static simd_float3 tpos = simd_make_float3(0.0f, 2.0f, 0.0f);

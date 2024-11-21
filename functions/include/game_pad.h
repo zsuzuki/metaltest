@@ -32,6 +32,7 @@ public:
     Button &operator=(Button &&)      = delete;
 
     void updateRepeat(int &count, Button *&repBtn);
+    void overridePress(bool press = true) { press_ = press ? true : press_; }
 
     [[nodiscard]] bool Pressed() const { return press_; }
     [[nodiscard]] bool On() const { return press_ && !prev_; }
