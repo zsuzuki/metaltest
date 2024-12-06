@@ -40,11 +40,12 @@ public:
   MainLoop()           = default;
   ~MainLoop() override = default;
 
-  void InitialWindowSize(double &width, double &height) override
+  bool InitialWindowSize(double &width, double &height, bool &border) override
   {
     std::cout << std::format("Default window size: {} x {}\n", width, height);
     width  = WindowWidth;
     height = WindowHeight;
+    return true;
   }
 
   void WillCloseWindow() override

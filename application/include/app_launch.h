@@ -50,7 +50,7 @@ public:
   virtual ~ApplicationLoop() = default;
 
   // start window size
-  virtual void InitialWindowSize(double &width, double &height) {}
+  virtual bool InitialWindowSize(double &width, double &height, bool &border) { return true; }
   // to close window
   virtual void WillCloseWindow() {}
   // window clear color

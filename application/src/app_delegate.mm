@@ -148,18 +148,21 @@ NSMenu *createMenu();
 {
   CGRect frame = {0.0, 0.0, 1600.0, 960.0};
 
-  appLoop_->InitialWindowSize(frame.size.width, frame.size.height);
+  bool   border     = false;
+  auto   resize     = appLoop_->InitialWindowSize(frame.size.width, frame.size.height, border);
   double clearRed   = 0.0;
   double clearGreen = 0.0;
   double clearBlue  = 0.0;
   double clearAlpha = 1.0;
   appLoop_->WindowClearColor(clearRed, clearGreen, clearBlue, clearAlpha);
 
-  window_                       = [[BorderlessWindow alloc]
-      initWithContentRect:frame
-                styleMask:NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
-                  backing:NSBackingStoreBuffered
-                    defer:false];
+  auto style = NSWindowStyleMaskClosable | (resize ? NSWindowStyleMaskResizable : 0) |
+               (border ? NSWindowStyleMaskTitled : NSWindowStyleMaskBorderless);
+
+  window_                       = [[BorderlessWindow alloc] initWithContentRect:frame
+                                                styleMask:style
+                                                  backing:NSBackingStoreBuffered
+                                                    defer:false];
   device_                       = MTLCreateSystemDefaultDevice();
   view_                         = [[MTKView alloc] initWithFrame:frame device:device_];
   view_.colorPixelFormat        = MTLPixelFormatRGBA8Unorm_sRGB;
