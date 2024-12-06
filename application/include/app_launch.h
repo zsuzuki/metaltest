@@ -49,6 +49,9 @@ public:
   ApplicationLoop()          = default;
   virtual ~ApplicationLoop() = default;
 
+  // window title
+  [[nodiscard]] virtual const char *GetApplicationName() const { return "Metal Test"; };
+
   // start window size
   virtual bool InitialWindowSize(double &width, double &height, bool &border) { return true; }
   // to close window

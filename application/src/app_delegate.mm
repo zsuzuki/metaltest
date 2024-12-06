@@ -185,7 +185,7 @@ NSMenu *createMenu();
   [view_ addSubview:inputView_];
   [window_ makeFirstResponder:view_];
 
-  window_.title = @"Test";
+  window_.title = [NSString stringWithUTF8String:appLoop_->GetApplicationName()];
   [window_ makeKeyAndOrderFront:nil];
 
   NSApplication *app = notification.object;
