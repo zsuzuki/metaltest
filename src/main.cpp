@@ -1,6 +1,7 @@
 //
 // Copyright 2024 Y.Suzuki(wave.suzuki.z@gmail.com)
 //
+#include <_time.h>
 #include <app_launch.h>
 #include <arm_neon.h>
 #include <array>
@@ -15,6 +16,7 @@
 #include <simd/quaternion.h>
 #include <simd/vector_make.h>
 #include <sprite4cpp.h>
+#include <time.h>
 
 namespace
 {
@@ -40,6 +42,9 @@ class MainLoop : public ApplicationLoop
 
   std::mutex padLock_;
 
+  uint64_t connectTime_;
+  uint64_t lastUpdateTime_;
+
 public:
   MainLoop()           = default;
   ~MainLoop() override = default;
@@ -55,6 +60,20 @@ public:
         {
           if (type == GamePad::UpdateType::PadState)
           {
+            auto nowTime = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
+            if (!updateCount_)
+            {
+              connectTime_ = lastUpdateTime_ = nowTime;
+            }
+            else if ((nowTime - lastUpdateTime_) > (1000 * 1000 * 1000))
+            {
+              connectTime_ = lastUpdateTime_ = nowTime;
+              updateCount_                   = 0;
+            }
+            else
+            {
+              lastUpdateTime_ = nowTime;
+            }
             updateCount_++;
           }
           std::lock_guard guard{padLock_};
@@ -62,10 +81,16 @@ public:
         },
         [&](uint64_t hash)
         {
+          updateCount_ = 0;
+          std::cout << std::format("Connect GamePad: {:x}\n", hash);
+        },
+        [&](uint64_t hash)
+        {
           if (padState_.checkHash(hash))
           {
-            std::cout << "passed hash check\n";
             padState_.enabled_ = false;
+            updateCount_       = 0;
+            std::cout << std::format("Disconnect GamePad: {:x}\n", hash);
           }
         });
 
@@ -118,9 +143,18 @@ public:
         });
 
     static int cnt   = 0;
-    auto       hello = std::format("こんにちは: {}/{}", cnt, updateCount_);
+    auto       hello = std::format("こんにちは: {}", cnt);
     ctx.Print(hello.c_str(), 200, 200);
     ctx.DrawRect({190, 190}, {600, 230}, {0, 1, 0, 1});
+
+    if (updateCount_ > 10)
+    {
+      auto diffTime  = lastUpdateTime_ - connectTime_;
+      auto secNum    = diffTime / (1000.0 * 1000.0 * 1000.0);
+      auto upRate    = (double)updateCount_ / secNum;
+      auto upRateStr = std::format("{:.3f}/{}/{:.1f}", upRate, updateCount_, secNum);
+      ctx.Print(upRateStr.c_str(), 200, 240);
+    }
 
     auto  base = simd_make_float2(300.0f, 400.0f);
     float deg  = ((cnt % 360) / 360.0f) * M_PI * 2.0f;

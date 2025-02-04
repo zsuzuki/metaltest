@@ -89,11 +89,12 @@ enum class UpdateType
   PadState,
   Motion,
 };
-using GamePadUpdateHandler     = std::function<void(const PadState &state, UpdateType)>;
-using GamePadDisconnectHandler = std::function<void(uint64_t)>;
+using GamePadUpdateHandler  = std::function<void(const PadState &state, UpdateType)>;
+using GamePadConnectHandler = std::function<void(uint64_t)>;
 
 // 更新時コールバックで処理する場合はこちら(更新レートが高いコントローラー推奨)
-bool InitGamePad(GamePadUpdateHandler &&handler, GamePadDisconnectHandler &&disconnect);
+bool InitGamePad(GamePadUpdateHandler &&handler, GamePadConnectHandler &&connect,
+                 GamePadConnectHandler &&disconnect);
 
 // 毎フレーム更新チェックする場合はこちら(InitGamePadを呼ぶ必要はない)
 bool GetPadState(int idx, PadState &state);

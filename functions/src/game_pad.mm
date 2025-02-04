@@ -44,8 +44,9 @@ namespace
 {
 std::list<PadState> padList;
 using psit = decltype(padList)::iterator;
-GamePadUpdateHandler     updateHandler{};
-GamePadDisconnectHandler disconnectHandler{};
+GamePadUpdateHandler  updateHandler{};
+GamePadConnectHandler connectHandler{};
+GamePadConnectHandler disconnectHandler{};
 
 //
 void convertMotion(PadState &state, GCMotion *motion)
@@ -136,6 +137,11 @@ void setupPad(GCController *controller)
   PadState newState{hashNum};
   padList.push_back(newState);
 
+  if (connectHandler)
+  {
+    connectHandler(hashNum);
+  }
+
   gamepad.valueChangedHandler = ^(GCExtendedGamepad *gamepad, GCControllerElement *elem) {
     auto padit = searchPad(hashNum);
     if (padit != padList.end())
@@ -169,7 +175,7 @@ void setupPad(GCController *controller)
     };
   }
 
-  NSLog(@"Create Gamepad: %llx", hashNum);
+  // NSLog(@"Create Gamepad: %llx", hashNum);
 }
 
 //
@@ -184,7 +190,7 @@ void erasePad(GCController *controller)
     {
       disconnectHandler(hashNum);
     }
-    NSLog(@"Delete Gamepad: %llx", hashNum);
+    // NSLog(@"Delete Gamepad: %llx", hashNum);
   }
 }
 
@@ -193,9 +199,11 @@ void erasePad(GCController *controller)
 //
 //
 //
-bool InitGamePad(GamePadUpdateHandler &&handler, GamePadDisconnectHandler &&disconnect)
+bool InitGamePad(GamePadUpdateHandler &&handler, GamePadConnectHandler &&connect,
+                 GamePadConnectHandler &&disconnect)
 {
   updateHandler     = std::move(handler);
+  connectHandler    = std::move(connect);
   disconnectHandler = std::move(disconnect);
 
   auto notificationCenter = [NSNotificationCenter defaultCenter];
