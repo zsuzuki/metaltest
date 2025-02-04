@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include <cinttypes>
+#include <functional>
 #include <simd/simd.h>
 
 namespace GamePad
@@ -40,6 +40,9 @@ public:
     [[nodiscard]] bool Repeat() const { return On() || repeat_; }
   };
 
+  PadState() = default;
+  PadState(uint64_t hnum) : hash(hnum) {}
+
   bool   enabled_;
   Button buttonUp;
   Button buttonDown;
@@ -69,12 +72,30 @@ public:
 
   void updateRepeat(Button &btn);
 
+  [[nodiscard]] bool operator==(const PadState &other) const { return hash == other.hash; }
+  [[nodiscard]] bool operator!=(const PadState &other) const { return hash != other.hash; }
+
+  [[nodiscard]] bool checkHash(uint64_t hnum) const { return hash == hnum; }
+
 private:
-  int     repeatCount_  = 0;
-  Button *repeatButton_ = nullptr;
+  int      repeatCount_  = 0;
+  Button  *repeatButton_ = nullptr;
+  uint64_t hash          = 0;
 };
 
 //
+enum class UpdateType
+{
+  PadState,
+  Motion,
+};
+using GamePadUpdateHandler     = std::function<void(const PadState &state, UpdateType)>;
+using GamePadDisconnectHandler = std::function<void(uint64_t)>;
+
+// 更新時コールバックで処理する場合はこちら(更新レートが高いコントローラー推奨)
+bool InitGamePad(GamePadUpdateHandler &&handler, GamePadDisconnectHandler &&disconnect);
+
+// 毎フレーム更新チェックする場合はこちら(InitGamePadを呼ぶ必要はない)
 bool GetPadState(int idx, PadState &state);
 
 } // namespace GamePad

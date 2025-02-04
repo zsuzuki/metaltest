@@ -4,6 +4,8 @@
 #import "game_pad.h"
 #import <GameController/GameController.h>
 
+#include <list>
+
 namespace GamePad
 {
 constexpr int RepeatCountInit = 30;
@@ -38,38 +40,31 @@ void PadState::Button::updateRepeat(int &count, PadState::Button *&repBtn)
 
 void PadState::updateRepeat(Button &btn) { btn.updateRepeat(repeatCount_, repeatButton_); }
 
-//
-//
-//
-bool GetPadState(int idx, PadState &state)
+namespace
 {
-  GCExtendedGamepad *input  = Nil;
-  GCMotion          *motion = Nil;
+std::list<PadState> padList;
+using psit = decltype(padList)::iterator;
+GamePadUpdateHandler     updateHandler{};
+GamePadDisconnectHandler disconnectHandler{};
 
-  for (GCController *controller in GCController.controllers)
+//
+void convertMotion(PadState &state, GCMotion *motion)
+{
+  if (motion != Nil)
   {
-    if (controller.extendedGamepad)
-    {
-      if (idx == 0)
-      {
-        input = controller.extendedGamepad;
-        [controller setPlayerIndex:GCControllerPlayerIndex1];
-        motion = controller.motion;
-        break;
-      }
-      else
-      {
-        idx--;
-      }
-    }
+    state.enabled_     = true;
+    auto att           = motion.attitude;
+    state.posture      = simd_quaternion((float)att.x, (float)att.y, (float)att.z, (float)att.w);
+    auto rot           = motion.rotationRate;
+    state.rotation     = simd_make_float3(rot.x, rot.y, rot.z);
+    auto acc           = motion.acceleration;
+    state.acceleration = simd_make_float3(acc.x, acc.y, acc.z);
   }
+}
 
-  if (input == Nil)
-  {
-    state.enabled_ = false;
-    return false;
-  }
-
+//
+void convertState(PadState &state, GCExtendedGamepad *input)
+{
   state.enabled_   = true;
   auto setupButton = [&](PadState::Button &btn, GCControllerButtonInput *src)
   {
@@ -112,30 +107,146 @@ bool GetPadState(int idx, PadState &state)
   state.rightY   = analogValue(rStick.yAxis.value);
   state.triggerL = analogValue(input.leftTrigger.analog ? input.leftTrigger.value : 0.0f);
   state.triggerR = analogValue(input.rightTrigger.analog ? input.rightTrigger.value : 0.0f);
+}
 
-  if (motion != Nil)
+//
+psit searchPad(NSUInteger hash)
+{
+  auto hashNum = static_cast<uint64_t>(hash);
+  auto ret     = padList.begin();
+  for (; ret != padList.end(); ret++)
   {
-    auto att           = [motion attitude];
-    state.posture      = simd_quaternion((float)att.x, (float)att.y, (float)att.z, (float)att.w);
-    auto rot           = [motion rotationRate];
-    state.rotation     = simd_make_float3(rot.x, rot.y, rot.z);
-    auto acc           = [motion acceleration];
-    state.acceleration = simd_make_float3(acc.x, acc.y, acc.z);
-
-    // motion.valueChangedHandler = ^(GCMotion *motion) {
-    //   NSLog(@"Gravity: %f, %f, %f", motion.gravity.x, motion.gravity.y, motion.gravity.z);
-    //   NSLog(@"User Acceleration: %f, %f, %f",
-    //         motion.userAcceleration.x,
-    //         motion.userAcceleration.y,
-    //         motion.userAcceleration.z);
-    //   NSLog(@"Rotation Rate: %f, %f, %f",
-    //         motion.rotationRate.x,
-    //         motion.rotationRate.y,
-    //         motion.rotationRate.z);
-    // };
+    if (ret->checkHash(hashNum))
+    {
+      return ret;
+    }
+  }
+  return ret;
+}
+//
+void setupPad(GCController *controller)
+{
+  auto gamepad = controller.extendedGamepad;
+  if (gamepad == Nil)
+  {
+    return;
   }
 
+  auto     hashNum = static_cast<uint64_t>(controller.hash);
+  PadState newState{hashNum};
+  padList.push_back(newState);
+
+  gamepad.valueChangedHandler = ^(GCExtendedGamepad *gamepad, GCControllerElement *elem) {
+    auto padit = searchPad(hashNum);
+    if (padit != padList.end())
+    {
+      convertState(*padit, gamepad);
+      if (updateHandler)
+      {
+        updateHandler(*padit, UpdateType::PadState);
+      }
+    }
+  };
+
+  auto motion = [controller motion];
+  if (motion != Nil)
+  {
+    if (motion.sensorsRequireManualActivation)
+    {
+      motion.sensorsActive = YES;
+    }
+
+    motion.valueChangedHandler = ^(GCMotion *motion) {
+      auto padit = searchPad(hashNum);
+      if (padit != padList.end())
+      {
+        convertMotion(*padit, motion);
+        if (updateHandler)
+        {
+          updateHandler(*padit, UpdateType::Motion);
+        }
+      }
+    };
+  }
+
+  NSLog(@"Create Gamepad: %llx", hashNum);
+}
+
+//
+void erasePad(GCController *controller)
+{
+  auto hashNum = static_cast<uint64_t>(controller.hash);
+  auto padit   = searchPad(hashNum);
+  if (padit != padList.end())
+  {
+    padList.erase(padit);
+    if (disconnectHandler)
+    {
+      disconnectHandler(hashNum);
+    }
+    NSLog(@"Delete Gamepad: %llx", hashNum);
+  }
+}
+
+} // namespace
+
+//
+//
+//
+bool InitGamePad(GamePadUpdateHandler &&handler, GamePadDisconnectHandler &&disconnect)
+{
+  updateHandler     = std::move(handler);
+  disconnectHandler = std::move(disconnect);
+
+  auto notificationCenter = [NSNotificationCenter defaultCenter];
+  [notificationCenter addObserverForName:GCControllerDidConnectNotification
+                                  object:nil
+                                   queue:nil
+                              usingBlock:^(NSNotification *note) {
+                                setupPad(note.object);
+                              }];
+  [notificationCenter addObserverForName:GCControllerDidDisconnectNotification
+                                  object:nil
+                                   queue:nil
+                              usingBlock:^(NSNotification *note) {
+                                erasePad(note.object);
+                              }];
+
   return true;
+}
+
+//
+//
+//
+bool GetPadState(int idx, PadState &state)
+{
+  GCExtendedGamepad *input  = Nil;
+  GCMotion          *motion = Nil;
+
+  for (GCController *controller in GCController.controllers)
+  {
+    if (controller.extendedGamepad)
+    {
+      if (idx == 0)
+      {
+        convertState(state, controller.extendedGamepad);
+        auto motion = [controller motion];
+        if (motion.sensorsRequireManualActivation)
+        {
+          motion.sensorsActive = YES;
+        }
+        convertMotion(state, motion);
+        return true;
+      }
+      else
+      {
+        idx--;
+      }
+    }
+  }
+
+  state.enabled_ = false;
+  return false;
 }
 
 } // namespace GamePad
