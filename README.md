@@ -7,5 +7,5 @@ Objective-Cを使用していますが、アプリケーション本体はC++に
 ## ビルド
 
 C++20でコンパイルしています。
-2004/4の時点ではCommandLineToolsのclang(15.0)ではビルドできません。
+2025/1の時点ではCommandLineToolsのclang(16.0)ではビルドできません。
 homebrewのLLVMを使用してください。
