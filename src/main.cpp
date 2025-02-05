@@ -30,8 +30,8 @@ constexpr double WindowHeight = 800.0;
 //
 class MainLoop : public ApplicationLoop
 {
-
   GamePad::PadState padState_{};
+  GamePad::PadState padStateUpdate_{};
   bool              onKeyW_      = false;
   bool              onKeyA_      = false;
   bool              onKeyS_      = false;
@@ -88,8 +88,8 @@ public:
         {
           if (padState_.checkHash(hash))
           {
-            padState_.enabled_ = false;
-            updateCount_       = 0;
+            padState_.enabled = false;
+            updateCount_      = 0;
             std::cout << std::format("Disconnect GamePad: {:x}\n", hash);
           }
         });
@@ -188,17 +188,17 @@ public:
       ctx.DrawTriangle3D(tp0, tp1, tp2, {1, 0, 0, 1});
     }
 
-    auto pad = [&]()
+    auto &pad = padStateUpdate_;
     {
       std::lock_guard guard{padLock_};
-      auto            copyPad = padState_;
-      return copyPad;
-    }();
+      padState_.fetch(pad);
+    }
+
     pad.buttonUp.overridePress(onKeyW_);
     pad.buttonLeft.overridePress(onKeyA_);
     pad.buttonDown.overridePress(onKeyS_);
     pad.buttonRight.overridePress(onKeyD_);
-    if (pad.enabled_)
+    if (pad.enabled)
     {
       static simd_float3 tpos = simd_make_float3(0.0f, 2.0f, 0.0f);
       static float       rotY = 0.0f;
@@ -215,29 +215,46 @@ public:
       ctx.DrawTriangle3D(tp0, tp1, tp2, {1, 1, 0, 1});
 
       std::array<bool, 11> btn{};
-      btn[0]      = pad.buttonA.Pressed();
-      btn[1]      = pad.buttonB.Pressed();
-      btn[2]      = pad.buttonC.Pressed();
-      btn[3]      = pad.buttonD.Pressed();
-      btn[4]      = pad.shoulderL.Pressed();
-      btn[5]      = pad.shoulderR.Pressed();
-      btn[6]      = pad.thumbL.Pressed();
-      btn[7]      = pad.thumbR.Pressed();
-      btn[8]      = pad.buttonMenu.Pressed();
-      btn[9]      = pad.buttonOptions.Pressed();
-      btn[10]     = pad.buttonTouch.Pressed();
-      auto  color = simd_make_float4(0, 1, 0, 1);
-      float y     = 100;
-      for (int i = 0; i < btn.size(); i++)
+
+      auto color    = simd_make_float4(0, 1, 0, 1);
+      auto drawBtns = [&](float xofs)
       {
-        auto p1 = simd_make_float2(1200, y + i * 60);
-        auto p2 = simd_make_float2(1250, y + 50 + i * 60);
-        ctx.DrawRect(p1, p2, {1, 1, 1, 1});
-        if (btn[i])
+        float y = 100;
+        for (int i = 0; i < btn.size(); i++)
         {
-          ctx.FillRect(p1, p2, color);
+          auto p1 = simd_make_float2(1200 + xofs, y + i * 60);
+          auto p2 = simd_make_float2(1250 + xofs, y + 50 + i * 60);
+          ctx.DrawRect(p1, p2, {1, 1, 1, 1});
+          if (btn[i])
+          {
+            ctx.FillRect(p1, p2, color);
+          }
         }
-      }
+      };
+      btn[0]  = pad.buttonA.Pressed();
+      btn[1]  = pad.buttonB.Pressed();
+      btn[2]  = pad.buttonC.Pressed();
+      btn[3]  = pad.buttonD.Pressed();
+      btn[4]  = pad.shoulderL.Pressed();
+      btn[5]  = pad.shoulderR.Pressed();
+      btn[6]  = pad.thumbL.Pressed();
+      btn[7]  = pad.thumbR.Pressed();
+      btn[8]  = pad.buttonMenu.Pressed();
+      btn[9]  = pad.buttonOptions.Pressed();
+      btn[10] = pad.buttonTouch.Pressed();
+      drawBtns(0);
+      btn[0]  = pad.buttonA.Repeat();
+      btn[1]  = pad.buttonB.Repeat();
+      btn[2]  = pad.buttonC.Repeat();
+      btn[3]  = pad.buttonD.Repeat();
+      btn[4]  = pad.shoulderL.Repeat();
+      btn[5]  = pad.shoulderR.Repeat();
+      btn[6]  = pad.thumbL.Repeat();
+      btn[7]  = pad.thumbR.Repeat();
+      btn[8]  = pad.buttonMenu.Repeat();
+      btn[9]  = pad.buttonOptions.Repeat();
+      btn[10] = pad.buttonTouch.Repeat();
+      drawBtns(70);
 
       // dpad
       auto drawdp = [&](bool val, float x, float y)

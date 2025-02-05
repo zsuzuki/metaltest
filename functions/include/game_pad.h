@@ -28,10 +28,20 @@ public:
     Button(Button &&other)      = delete;
     ~Button()                   = default;
 
-    Button &operator=(const Button &) = default;
-    Button &operator=(Button &&)      = delete;
+    Button &operator=(const Button &other)
+    {
+      prev_  = press_;
+      press_ = other.press_;
+      return *this;
+    }
+    Button &operator=(Button &&) = delete;
+    Button &operator=(bool val)
+    {
+      press_ = val;
+      return *this;
+    }
 
-    void updateRepeat(int &count, Button *&repBtn);
+    void update(int &count, Button *&repBtn);
     void overridePress(bool press = true) { press_ = press ? true : press_; }
 
     [[nodiscard]] bool Pressed() const { return press_; }
@@ -43,7 +53,7 @@ public:
   PadState() = default;
   PadState(uint64_t hnum) : hash(hnum) {}
 
-  bool   enabled_;
+  bool   enabled;
   Button buttonUp;
   Button buttonDown;
   Button buttonLeft;
@@ -70,17 +80,20 @@ public:
   simd_float3 rotation;
   simd_quatf  posture;
 
-  void updateRepeat(Button &btn);
-
   [[nodiscard]] bool operator==(const PadState &other) const { return hash == other.hash; }
   [[nodiscard]] bool operator!=(const PadState &other) const { return hash != other.hash; }
 
   [[nodiscard]] bool checkHash(uint64_t hnum) const { return hash == hnum; }
 
+  void fetch(PadState &receive);
+
 private:
   int      repeatCount_  = 0;
   Button  *repeatButton_ = nullptr;
   uint64_t hash          = 0;
+
+  void updateButtons();
+  void updateButton(Button &btn);
 };
 
 //

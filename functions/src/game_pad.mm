@@ -2,6 +2,7 @@
 // Copyright 2024 Y.Suzuki(wave.suzuki.z@gmail.com)
 //
 #import "game_pad.h"
+#include <Foundation/NSObjCRuntime.h>
 #import <GameController/GameController.h>
 
 #include <list>
@@ -11,7 +12,7 @@ namespace GamePad
 constexpr int RepeatCountInit = 30;
 constexpr int RepeatCountCont = 5;
 
-void PadState::Button::updateRepeat(int &count, PadState::Button *&repBtn)
+void PadState::Button::update(int &count, PadState::Button *&repBtn)
 {
   repeat_ = false;
 
@@ -38,7 +39,36 @@ void PadState::Button::updateRepeat(int &count, PadState::Button *&repBtn)
   }
 }
 
-void PadState::updateRepeat(Button &btn) { btn.updateRepeat(repeatCount_, repeatButton_); }
+void PadState::updateButton(Button &btn) { btn.update(repeatCount_, repeatButton_); }
+
+void PadState::fetch(PadState &receive)
+{
+  auto repCnt           = receive.repeatCount_;
+  auto repBtn           = receive.repeatButton_;
+  receive               = *this;
+  receive.repeatCount_  = repCnt;
+  receive.repeatButton_ = repBtn;
+  receive.updateButtons();
+}
+
+void PadState::updateButtons()
+{
+  updateButton(buttonMenu);
+  updateButton(buttonOptions);
+  updateButton(buttonA);
+  updateButton(buttonB);
+  updateButton(buttonC);
+  updateButton(buttonD);
+  updateButton(shoulderL);
+  updateButton(shoulderR);
+  updateButton(buttonUp);
+  updateButton(buttonDown);
+  updateButton(buttonLeft);
+  updateButton(buttonRight);
+  updateButton(thumbL);
+  updateButton(thumbR);
+  updateButton(buttonTouch);
+}
 
 namespace
 {
@@ -53,7 +83,7 @@ void convertMotion(PadState &state, GCMotion *motion)
 {
   if (motion != Nil)
   {
-    state.enabled_     = true;
+    state.enabled      = true;
     auto att           = motion.attitude;
     state.posture      = simd_quaternion((float)att.x, (float)att.y, (float)att.z, (float)att.w);
     auto rot           = motion.rotationRate;
@@ -66,13 +96,9 @@ void convertMotion(PadState &state, GCMotion *motion)
 //
 void convertState(PadState &state, GCExtendedGamepad *input)
 {
-  state.enabled_   = true;
+  state.enabled    = true;
   auto setupButton = [&](PadState::Button &btn, GCControllerButtonInput *src)
-  {
-    const PadState::Button newState{src.isPressed, btn.Pressed()};
-    btn = newState;
-    state.updateRepeat(btn);
-  };
+  { btn = src.isPressed; };
   setupButton(state.buttonMenu, input.buttonMenu);
   setupButton(state.buttonOptions, input.buttonOptions);
   setupButton(state.buttonA, input.buttonA);
@@ -237,13 +263,15 @@ bool GetPadState(int idx, PadState &state)
     {
       if (idx == 0)
       {
-        convertState(state, controller.extendedGamepad);
+        PadState baseState{};
+        convertState(baseState, controller.extendedGamepad);
         auto motion = [controller motion];
         if (motion.sensorsRequireManualActivation)
         {
           motion.sensorsActive = YES;
         }
-        convertMotion(state, motion);
+        convertMotion(baseState, motion);
+        baseState.fetch(state);
         return true;
       }
       else
@@ -253,7 +281,7 @@ bool GetPadState(int idx, PadState &state)
     }
   }
 
-  state.enabled_ = false;
+  state.enabled = false;
   return false;
 }
 
