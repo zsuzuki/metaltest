@@ -3,6 +3,7 @@
 //
 #import "draw3d.h"
 #import "camera.h"
+#include "dsemaphore.h"
 #include "shader_def.h"
 #import <Metal/Metal.h>
 #include <arm_neon.h>
@@ -28,6 +29,9 @@
   id<MTLBuffer>              verticesPlane_[3];
   NSUInteger                 nbPrimitives_;
   NSUInteger                 nbPlanes_;
+
+  SimpleLock primLock_;
+  SimpleLock planeLock_;
 }
 
 //
@@ -105,23 +109,29 @@
 //
 - (void)drawLine:(simd_float3)from to:(simd_float3)to color:(simd_float4)color
 {
+  primLock_.lock();
   auto  vtx   = vertices_[pageIndex_];
   auto *vtx3d = (VertexDataPrim3D *)vtx.contents + nbPrimitives_;
+
+  nbPrimitives_ += 2;
+  primLock_.unlock();
 
   auto col16        = vcvt_f16_f32(color);
   vtx3d[0].position = from;
   vtx3d[0].color    = col16;
   vtx3d[1].position = to;
   vtx3d[1].color    = col16;
-
-  nbPrimitives_ += 2;
 }
 
 //
 - (void)drawTriangle:(simd_float3)p0 p1:(simd_float3)p1 p2:(simd_float3)p2 color:(simd_float4)color
 {
+  planeLock_.lock();
   auto  vtx   = verticesPlane_[pageIndex_];
   auto *vtx3d = (VertexDataPrim3D *)vtx.contents + nbPlanes_;
+
+  nbPlanes_ += 3;
+  planeLock_.unlock();
 
   auto col16        = vcvt_f16_f32(color);
   vtx3d[0].position = p0;
@@ -130,8 +140,6 @@
   vtx3d[1].color    = col16;
   vtx3d[2].position = p2;
   vtx3d[2].color    = col16;
-
-  nbPlanes_ += 3;
 }
 
 //

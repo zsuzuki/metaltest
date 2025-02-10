@@ -2,6 +2,7 @@
 // Copyright 2024 Y.Suzuki(wave.suzuki.z@gmail.com)
 //
 #import "draw2d.h"
+#include "dsemaphore.h"
 #import "font_render.h"
 #include "shader_def.h"
 #import "sprite.h"
@@ -64,6 +65,10 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
   id<MTLBuffer>              fillVertices_[3];
   NSUInteger                 nbFillPrimitives_;
 
+  //
+  SimpleLock primLock_;
+  SimpleLock fillLock_;
+
   // sprite
   NSMutableArray<Sprite *> *spriteList;
 }
@@ -77,22 +82,28 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
 
 - (void)drawLine:(simd_float2)from to:(simd_float2)to color:(simd_float4)color
 {
+  primLock_.lock();
   auto  vtx   = vertices_[pageIndex_];
   auto *vtx2d = (VertexDataPrim2D *)vtx.contents + nbPrimitives_;
+
+  nbPrimitives_ += 2;
+  primLock_.unlock();
 
   auto col16        = vcvt_f16_f32(color);
   vtx2d[0].position = from * contentScale_;
   vtx2d[0].color    = col16;
   vtx2d[1].position = to * contentScale_;
   vtx2d[1].color    = col16;
-
-  nbPrimitives_ += 2;
 }
 
 - (void)drawRect:(simd_float2)from to:(simd_float2)to color:(simd_float4)color
 {
+  primLock_.lock();
   auto  vtx   = vertices_[pageIndex_];
   auto *vtx2d = (VertexDataPrim2D *)vtx.contents + nbPrimitives_;
+
+  nbPrimitives_ += 8;
+  primLock_.unlock();
 
   from *= contentScale_;
   to *= contentScale_;
@@ -114,8 +125,6 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
   vtx2d[6].color    = col16;
   vtx2d[7].position = to;
   vtx2d[7].color    = col16;
-
-  nbPrimitives_ += 8;
 }
 
 - (void)drawPolygon:(simd_float2)pos
@@ -129,8 +138,12 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
     return;
   }
 
+  primLock_.lock();
   auto  vtx   = vertices_[pageIndex_];
   auto *vtx2d = (VertexDataPrim2D *)vtx.contents + nbPrimitives_;
+
+  nbPrimitives_ += sides * 2;
+  primLock_.unlock();
 
   auto col16 = vcvt_f16_f32(color);
 
@@ -148,14 +161,17 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
     (*vtx2d).position = (pos2 * rad + pos) * contentScale_;
     (*vtx2d).color    = col16;
     vtx2d++;
-    nbPrimitives_ += 2;
   }
 }
 
 - (void)fillRect:(simd_float2)from to:(simd_float2)to color:(simd_float4)color
 {
+  fillLock_.lock();
   auto  vtx   = fillVertices_[pageIndex_];
   auto *vtx2d = (VertexDataPrim2D *)vtx.contents + nbFillPrimitives_;
+
+  nbFillPrimitives_ += 6;
+  fillLock_.unlock();
 
   from *= contentScale_;
   to *= contentScale_;
@@ -173,8 +189,6 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
   vtx2d[4].color    = col16;
   vtx2d[5].position = to;
   vtx2d[5].color    = col16;
-
-  nbFillPrimitives_ += 6;
 }
 
 - (void)fillPolygon:(simd_float2)pos
@@ -188,8 +202,12 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
     return;
   }
 
+  fillLock_.lock();
   auto  vtx   = fillVertices_[pageIndex_];
   auto *vtx2d = (VertexDataPrim2D *)vtx.contents + nbFillPrimitives_;
+
+  nbFillPrimitives_ += sides * 3;
+  fillLock_.unlock();
 
   auto col16 = vcvt_f16_f32(color);
 
@@ -210,7 +228,6 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
     (*vtx2d).position = (pos2 * rad + pos) * contentScale_;
     (*vtx2d).color    = col16;
     vtx2d++;
-    nbFillPrimitives_ += 3;
   }
 }
 
