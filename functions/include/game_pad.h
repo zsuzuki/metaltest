@@ -53,7 +53,7 @@ public:
   PadState() = default;
   PadState(uint64_t hnum) : hash(hnum) {}
 
-  bool   enabled;
+  bool   enabled = false;
   Button buttonUp;
   Button buttonDown;
   Button buttonLeft;
@@ -69,16 +69,16 @@ public:
   Button buttonMenu;
   Button buttonOptions;
   Button buttonTouch;
-  float  leftX;
-  float  leftY;
-  float  rightX;
-  float  rightY;
-  float  triggerL;
-  float  triggerR;
+  float  leftX    = 0.0f;
+  float  leftY    = 0.0f;
+  float  rightX   = 0.0f;
+  float  rightY   = 0.0f;
+  float  triggerL = 0.0f;
+  float  triggerR = 0.0f;
 
-  simd_float3 acceleration;
-  simd_float3 rotation;
-  simd_quatf  posture;
+  simd_float3 acceleration = simd_make_float3(0.0f);
+  simd_float3 rotation     = simd_make_float3(0.0f);
+  simd_quatf  posture      = simd_quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 
   [[nodiscard]] bool operator==(const PadState &other) const { return hash == other.hash; }
   [[nodiscard]] bool operator!=(const PadState &other) const { return hash != other.hash; }
