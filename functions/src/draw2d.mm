@@ -348,11 +348,11 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
 
     for (int i = 0; i < 3; i++)
     {
-      textVtx_[i]      = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 500
+      textVtx_[i]      = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 5000
                                          options:MTLResourceStorageModeShared];
-      vertices_[i]     = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 500
+      vertices_[i]     = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 30000
                                           options:MTLResourceStorageModeShared];
-      fillVertices_[i] = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 500
+      fillVertices_[i] = [device_ newBufferWithLength:sizeof(VertexDataPrim2D) * 4 * 30000
                                               options:MTLResourceStorageModeShared];
     }
     requestClearText_ = NO;
