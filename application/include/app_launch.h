@@ -17,6 +17,9 @@ public:
   ApplicationContext()          = default;
   virtual ~ApplicationContext() = default;
 
+  // info
+  virtual float ContentScale() const = 0;
+
   // text
   virtual void Print(const char *msg, float x, float y)                      = 0;
   virtual void SetTextColor(float red, float green, float blue, float alpha) = 0;

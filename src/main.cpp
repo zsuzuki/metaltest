@@ -143,7 +143,7 @@ public:
         });
 
     static int cnt   = 0;
-    auto       hello = std::format("こんにちは: {}", cnt);
+    auto       hello = std::format("こんにちは({:.2f}): {}", ctx.ContentScale(), cnt);
     ctx.Print(hello.c_str(), 200, 200);
     ctx.DrawRect({190, 190}, {600, 230}, {0, 1, 0, 1});
 

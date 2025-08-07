@@ -8,6 +8,7 @@
 #import "draw3d.h"
 #import "sprite.h"
 #include "sprite4cpp.h"
+#include <AppKit/AppKit.h>
 #import <Metal/Metal.h>
 #include <memory>
 #import <simd/simd.h>
@@ -51,6 +52,8 @@ public:
 
   AppCtx()           = default;
   ~AppCtx() override = default;
+
+  float ContentScale() const override { return [[NSScreen mainScreen] backingScaleFactor]; }
 
   void Print(const char *msg, float x, float y) override
   {
