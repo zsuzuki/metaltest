@@ -442,6 +442,8 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
   uniform2d->size[0] = screenSize.width;
   uniform2d->size[1] = screenSize.height;
 
+  [renderEncoder setDepthStencilState:depthState_];
+
   if (nbPrimitives_ > 0 || nbFillPrimitives_ > 0)
   {
     [renderEncoder setRenderPipelineState:pipelineStatePrim_];
@@ -477,7 +479,6 @@ using DrawStringPtr = std::shared_ptr<DrawString>;
 
   // text draw
   [renderEncoder setRenderPipelineState:pipelineStateText_];
-  [renderEncoder setDepthStencilState:depthState_];
 
   [renderEncoder setVertexBuffer:uniformBuffer_ offset:0 atIndex:1];
   [renderEncoder setFragmentBuffer:uniformBuffer_ offset:0 atIndex:1];
